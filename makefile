@@ -66,9 +66,9 @@ LOCAL = $(TESTS) $(CWARNS)
 
 
 # enable Linux goodies
-MYCFLAGS= $(LOCAL) -std=c99 -DLUA_USE_LINUX 
+MYCFLAGS= $(LOCAL) -std=c99 -DLUA_USE_LINUX #去掉了readline方便编译
 MYLDFLAGS= $(LOCAL) -Wl,-E
-MYLIBS= ""
+MYLIBS= ""	#这里也是去掉了readline
 
 CC= gcc
 CFLAGS= -Wall -O2 $(MYCFLAGS) -fno-stack-protector -fno-common -march=native

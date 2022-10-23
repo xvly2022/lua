@@ -13,3 +13,7 @@ testes/libs/all
 
 temp
 lua
+.vscode/settings.json
+
+.vscode/launch.json
+.vscode/tasks.json

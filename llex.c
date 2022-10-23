@@ -28,7 +28,10 @@
 #include "lzio.h"
 
 
-
+/*
+  这个宏的参数传递的ls是llex.h里的LexState。
+  功能大概是从输入流里获得下一个字节，如果能得到字节就返回，不然调用luaz_fill返回EOF
+*/
 #define next(ls)	(ls->current = zgetc(ls->z))
 
 
@@ -48,12 +51,16 @@ static const char *const luaX_tokens [] = {
 };
 
 
+/*
+  这个宏的参数传递的ls是llex.h里的LexState。
+*/
 #define save_and_next(ls) (save(ls, ls->current), next(ls))
 
 
 static l_noret lexerror (LexState *ls, const char *msg, int token);
 
-
+//检查lexstate的buff长度并且保存一个字节，这个函数是有检查的，同时维护缓存的长度，\
+而且长度为了保证安全，不会超过最大值的一半，避免有人玩溢出。
 static void save (LexState *ls, int c) {
   Mbuffer *b = ls->buff;
   if (luaZ_bufflen(b) + 1 > luaZ_sizebuffer(b)) {
@@ -66,7 +73,9 @@ static void save (LexState *ls, int c) {
   b->buffer[luaZ_bufflen(b)++] = cast_char(c);
 }
 
-
+//这段代码的作用是将之前保留字字符串和“_ENV”这个代表全局变量表的字符串，全部压到lua堆栈，\
+并且将将垃圾回收的机制取消掉。\
+（因为保留字通过TS来表示，并且已经约定好这些都是唯一标号（即字节码），所以需要对ts的extea进行处理）
 void luaX_init (lua_State *L) {
   int i;
   TString *e = luaS_newliteral(L, LUA_ENV);  /* create env name */
@@ -78,7 +87,7 @@ void luaX_init (lua_State *L) {
   }
 }
 
-
+//上面这段代码是将令牌变回字符串，并且因为八位字节始终表示自己，所以 token < FIRST_RESERVED这个判定条件是处理单字节令牌和终端控制符号的。而下半部分是处理保留字的。
 const char *luaX_token2str (LexState *ls, int token) {
   if (token < FIRST_RESERVED) {  /* single-byte symbols? */
     if (lisprint(token))
@@ -95,7 +104,7 @@ const char *luaX_token2str (LexState *ls, int token) {
   }
 }
 
-
+//是lexerror的中间层，调用luaX_token2str
 static const char *txtToken (LexState *ls, int token) {
   switch (token) {
     case TK_NAME: case TK_STRING:
@@ -107,7 +116,8 @@ static const char *txtToken (LexState *ls, int token) {
   }
 }
 
-
+//语法错误，使用抛出向外传输信息\
+这里提到了就稍微讲一下，类似寄存器，我先压一个栈帧，然后触发lua状态机的抛出，这个是各个模块结构的一般流程。
 static l_noret lexerror (LexState *ls, const char *msg, int token) {
   msg = luaG_addinfo(ls->L, msg, ls->source, ls->linenumber);
   if (token)
@@ -115,7 +125,7 @@ static l_noret lexerror (LexState *ls, const char *msg, int token) {
   luaD_throw(ls->L, LUA_ERRSYNTAX);
 }
 
-
+//为其他同为lex的处理出错调用，直接提示在哪里出错。之前有直接调用的，说是缓冲区不够，手动提供一个为0的令牌。（0是空字符）
 l_noret luaX_syntaxerror (LexState *ls, const char *msg) {
   lexerror(ls, msg, ls->t.token);
 }
@@ -276,7 +286,8 @@ static size_t skip_sep (LexState *ls) {
          : 0;
 }
 
-
+//该函数与skip_sep强绑定，默认是读取长字符串之前有一个“[”。
+//该函数的行为是使词法分析器一直读取非换行字符串到缓冲内，直到遇到序列结束停止标志符，在读取完一个序列之后，将这个长字符压到词法分析器。在这个阶段内，唯一处理的异常是EOF.
 static void read_long_string (LexState *ls, SemInfo *seminfo, size_t sep) {
   int line = ls->linenumber;  /* initial line (for error message) */
   save_and_next(ls);  /* skip 2nd '[' */

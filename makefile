@@ -68,9 +68,9 @@ LOCAL = $(TESTS) $(CWARNS)
 # enable Linux goodies
 MYCFLAGS= $(LOCAL) -std=c99 -DLUA_USE_LINUX #去掉了readline方便编译
 MYLDFLAGS= $(LOCAL) -Wl,-E
-MYLIBS= ""	#这里也是去掉了readline
+MYLIBS= 	#这里也是去掉了readline
 
-CC= gcc
+CC= gcc -g #添加调试
 CFLAGS= -Wall -O2 $(MYCFLAGS) -fno-stack-protector -fno-common -march=native
 AR= ar rc
 RANLIB= ranlib
@@ -81,7 +81,7 @@ RM= rm -f
 # == END OF USER SETTINGS. NO NEED TO CHANGE ANYTHING BELOW THIS LINE =========
 
 
-LIBS = -lm
+LIBS = -lm 
 
 CORE_T=	liblua.a
 CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o \

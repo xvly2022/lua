@@ -17,17 +17,26 @@
 ** Single-char tokens (terminal symbols) are represented by their own
 ** numeric code. Other tokens start at the following value.
 */
+/*
+    represented:代表
+
+    翻译：单字节令牌 （终端符号）被表示他们自己的数字（8位）（即char类型始终描述它们自己）。其他令牌值从这些值之后开始。
+
+*/
 #define FIRST_RESERVED	(UCHAR_MAX + 1)
 
 
 #if !defined(LUA_ENV)
-#define LUA_ENV		"_ENV"
+#define LUA_ENV		"_ENV"  //保证了一定有一个lua环境可以查询
 #endif
 
 
 /*
 * WARNING: if you change the order of this enumeration,
 * grep "ORDER RESERVED"
+*/
+/*
+  这里面是保留字和终端符号，都是在上面哪个FIRST_RESRVED之后的
 */
 enum RESERVED {
   /* terminal symbols denoted by reserved words */
@@ -43,6 +52,7 @@ enum RESERVED {
 };
 
 /* number of reserved words */
+/*保留字有多少个*/
 #define NUM_RESERVED	(cast_int(TK_WHILE-FIRST_RESERVED + 1))
 
 
@@ -51,18 +61,30 @@ typedef union {
   lua_Integer i;
   TString *ts;
 } SemInfo;  /* semantics information */
+/*
+  semantics:语义
+
+  翻译：语义上的信息
+
+  联合内的成员有数字，整型，字符串头？
+*/
 
 
 typedef struct Token {
   int token;
   SemInfo seminfo;
-} Token;
+} Token;//令牌是在seminfo基础上添加token
 
 
 /* state of the lexer plus state of the parser when shared by all
    functions */
+/*
+    parser：解释器
+
+    当所有函数共享时，语法分析器的状态加上解析器的状态
+*/
 typedef struct LexState {
-  int current;  /* current character (charint) */
+  int current;  /* current character (charint) */ //从llex.c内的next(ls)宏里能看的出这个是真的char
   int linenumber;  /* input line counter */
   int lastline;  /* line of last token 'consumed' */
   Token t;  /* current token */
